@@ -1,5 +1,5 @@
 <div id="top"></div>
-<h3 align="center">Proxy FireFox</h3>
+<h3 align="center">Proxy Firefox</h3>
 
   <p align="center">
     A quick way to start and stop an SSH proxy for a Firefox session.
@@ -16,9 +16,9 @@ Download the script, `chmod`, then change the lines at the top to match your nee
 
 
 ```
-# The username to use on the remote machine.
-remote_user="foo"
+# The remote machine, and user to use. The user can be left blank if you have it set in ~/.ssh/config
 remote_host="bar"
+remote_user=
 
 # The path to the identity file, if you haven't set the file via your ~/.ssh/config
 # Otherwise, it makes sense to just leave this blank.
