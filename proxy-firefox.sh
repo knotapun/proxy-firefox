@@ -1,31 +1,33 @@
 #!/bin/bash
-#Author: Parker Jones <knotapun@gmail.com>
-#Written: 2022-03-12
+# Author: Parker Jones <knotapun@gmail.com>
+# Written: 2022-03-12
 
-#The username and password to use on the remote machine.
-remote_user="AVeryUnlikelyUsername"
-remote_host="AVeryUnlikelyHostname"
+# The username to use on the remote machine.
+remote_user="foo"
+remote_host="bar"
 
-#The path to the identity file, if you haven't set the file via your ~/.ssh/config folder.
-#remote_identity_file=~/.ssh/id_ed25519
+# The path to the identity file, if you haven't set the file via your ~/.ssh/config
+# Otherwise, it makes sense to just leave this blank.
+# remote_identity_file=~/.ssh/id_ed25519
 remote_identity_file=
 
+# A free open port we can use for our SOCKS proxy.
 local_proxy_port=8192
+
+# Setting this to "localhost" will allow people on your local network to connect to your proxy, too.
+# making "localhost" probably a bad choice.
 local_proxy_address="127.0.0.1"
 
-# The profile name we want to create, it's advisable NOT to use 'default' or really, any existing profile.
+# The profile name we want to create, it's advisable NOT to use 'default', as it will set options
+# on your profile that might be annoying to reverse.
 firefox_profile="ssh-proxied"
 firefox_profile_directory=~/.mozilla/firefox
 
 # A comma seperated list of addresses not to proxy.
 not_proxied="localhost, 127.0.0.1"
 
-IReallyUseThatUserOrHost=0
 
-
-
-
-function get_profile() {      
+get_profile() {      
   found_profile=$(find ${firefox_profile_directory}/*\.${firefox_profile} -maxdepth 0 -type d -printf "%f\n" 2> /dev/null)
 }
 found_profile=""
@@ -91,11 +93,25 @@ fi
 # -N - Do not execute commands.
 # -f - fork/Run in background.
 
+# Account for possible unimportant variables
+sshstr_host=""
+sshstr_identity=""
+if [[ -z $remote_user ]]; then
+  sshstr_host="${remote_host}"
+else
+  sshstr_host="${remote_user}@${remote_host}" 
+fi
+
+# Maybe they don't need an identity file specified?
+if [[ -n $remote_identity_file ]]; then
+  sshstr_identity="-i ${remote_identity_file}"
+fi
+
 # Start ssh
-ssh -2 -D ${local_proxy_address}:${local_proxy_port} -C -N -f ${remote_user}@${remote_host};
+ssh -2 -D ${local_proxy_address}:${local_proxy_port} -C -N -f ${sshstr_host} ${sshstr_identity};
 exit_code=$?
 
-
+# Check if ssh thinks it started correctly.
 if [[ $exit_code -ne 0 ]]; then
   echo "ssh failed to connect. Not starting firefox."
   exit 7; #ssh didn't run.
@@ -103,5 +119,6 @@ fi
 
 
 ( firefox -no-remote -P "${firefox_profile}" &>/dev/null; \
-  kill "$(lsof -i :${local_proxy_port} -P -n -a -u ${USER:-$USERNAME} -c ssh -t)"; \
+# Kill ssh after firefox returns.
+  kill "$(lsof -i :${local_proxy_port} -P -n -a -u ${USER:-$USERNAME} -c ssh -t)" &>/dev/null; \
   exit 0 ) &
