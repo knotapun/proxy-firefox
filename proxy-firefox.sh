@@ -3,7 +3,11 @@
 # Written: 2022-03-12
 
 # The remote machine, and user to use. The user can be left blank if you have it set in ~/.ssh/config
+<<<<<<< HEAD
 remote_host="foo"
+=======
+remote_host="bar"
+>>>>>>> 2f312ac3f21d454d9cfd247fca408d38882749ca
 remote_user=
 
 
